@@ -12,6 +12,7 @@ function App() {
     const savedDibs = localStorage.getItem('segmentDibs')
     return savedDibs ? JSON.parse(savedDibs) : {}
   })
+  const [tempDibs, setTempDibs] = useState({})
 
   useEffect(() => {
     fetchItems()
@@ -76,11 +77,26 @@ function App() {
     localStorage.setItem('segmentDibs', JSON.stringify(newDibs))
   }
 
+  const handleDibsSave = (itemId) => {
+    const trimmedValue = (tempDibs[itemId] || '').trim()
+    if (trimmedValue) {
+      handleDibsChange(itemId, trimmedValue)
+      // Clear temp value after saving
+      const newTempDibs = { ...tempDibs }
+      delete newTempDibs[itemId]
+      setTempDibs(newTempDibs)
+    }
+  }
+
   const handleDibsClear = (itemId) => {
     const newDibs = { ...dibs }
     delete newDibs[itemId]
     setDibs(newDibs)
     localStorage.setItem('segmentDibs', JSON.stringify(newDibs))
+    // Also clear temp value
+    const newTempDibs = { ...tempDibs }
+    delete newTempDibs[itemId]
+    setTempDibs(newTempDibs)
   }
 
   const getPageNumbers = () => {
@@ -152,13 +168,12 @@ function App() {
                   <th>Overall Attempts</th>
                   <th>Difficulty</th>
                   <th>Last Attempt Date</th>
-                  <th>Strava</th>
                 </tr>
               </thead>
               <tbody>
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan="16" style={{ textAlign: 'center', padding: '2rem' }}>
+                    <td colSpan="15" style={{ textAlign: 'center', padding: '2rem' }}>
                       No segments found. Create some segments using the API!
                     </td>
                   </tr>
@@ -180,23 +195,48 @@ function App() {
                               </button>
                             </div>
                           ) : (
-                            <input
-                              type="text"
-                              className="dibs-input"
-                              placeholder="Your name..."
-                              value={dibs[item.id] || ''}
-                              onChange={(e) => handleDibsChange(item.id, e.target.value)}
-                              onBlur={(e) => {
-                                if (!e.target.value.trim()) {
-                                  handleDibsClear(item.id)
-                                }
-                              }}
-                              aria-label="Claim this segment"
-                            />
+                            <>
+                              <input
+                                type="text"
+                                className="dibs-input"
+                                placeholder="Your name..."
+                                value={tempDibs[item.id] !== undefined ? tempDibs[item.id] : (dibs[item.id] || '')}
+                                onChange={(e) => {
+                                  setTempDibs({ ...tempDibs, [item.id]: e.target.value })
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleDibsSave(item.id)
+                                  }
+                                }}
+                                aria-label="Claim this segment"
+                              />
+                              <button
+                                className="dibs-save-button"
+                                onClick={() => handleDibsSave(item.id)}
+                                aria-label="Save dibs"
+                                title="Save"
+                              >
+                                ✓
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
-                      <td className="activity-name" data-label="">{formatValue(item.segment_name)}</td>
+                      <td className="activity-name" data-label="">
+                        {item.strava_url ? (
+                          <a 
+                            href={item.strava_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="segment-name-link"
+                          >
+                            {formatValue(item.segment_name)}
+                          </a>
+                        ) : (
+                          formatValue(item.segment_name)
+                        )}
+                      </td>
                       <td data-label="Distance">{formatDistance(item.distance)}</td>
                       <td data-label="Elevation Gain">{formatElevation(item.elevation_gain)}</td>
                       <td data-label="Elevation Loss">{formatElevation(item.elevation_loss)}</td>
@@ -210,20 +250,6 @@ function App() {
                       <td data-label="Overall Attempts">{formatValue(item.overall_attempts)}</td>
                       <td data-label="Difficulty">{formatValue(item.difficulty)}</td>
                       <td data-label="Last Attempt Date">{formatValue(item.last_attempt_date)}</td>
-                      <td data-label="Strava">
-                        {item.strava_url ? (
-                          <a 
-                            href={item.strava_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="strava-link"
-                          >
-                            View Segment
-                          </a>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
                     </tr>
                   ))
                 )}

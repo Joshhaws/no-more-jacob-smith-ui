@@ -239,7 +239,7 @@
 }
 
 .dibs-input {
-  width: 100%;
+  flex: 1;
   padding: 0.5rem 0.75rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -250,6 +250,7 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
   font-family: inherit;
+  margin-right: 0.5rem;
 }
 
 .dibs-input::placeholder {
@@ -314,6 +315,37 @@
 
 .dibs-clear-button:active {
   transform: scale(0.95);
+}
+
+.dibs-save-button {
+  background: rgba(255, 107, 53, 0.2);
+  border: 1px solid rgba(255, 107, 53, 0.4);
+  border-radius: 8px;
+  width: 2rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.dibs-save-button:hover {
+  background: rgba(255, 107, 53, 0.3);
+  border-color: rgba(255, 107, 53, 0.6);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+}
+
+.dibs-save-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(255, 107, 53, 0.2);
 }
 
 /* Mobile dibs styling */
@@ -570,6 +602,26 @@
 .retry-button:active {
   transform: translateY(0);
   box-shadow: 0 2px 8px rgba(255, 77, 0, 0.3);
+}
+
+.segment-name-link {
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.segment-name-link:hover {
+  color: rgba(255, 107, 53, 0.9);
+  border-bottom-color: rgba(255, 107, 53, 0.5);
+}
+
+.strava-indicator {
+  color: rgba(255, 107, 53, 0.8);
+  font-size: 1rem;
+  display: inline-block;
+  cursor: default;
 }
 
 .strava-link {
