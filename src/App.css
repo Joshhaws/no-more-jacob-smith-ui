@@ -1,0 +1,111 @@
+.app {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+  color: #ffffff;
+}
+
+.header {
+  background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.main-content {
+  padding: 3rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.table-container {
+  background: #2a2a2a;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.activity-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.activity-table thead {
+  background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
+}
+
+.activity-table th {
+  padding: 1.25rem 1.5rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+}
+
+.activity-table tbody tr {
+  border-bottom: 1px solid #3a3a3a;
+  transition: background-color 0.2s ease;
+}
+
+.activity-table tbody tr:hover {
+  background-color: #353535;
+}
+
+.activity-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.activity-table td {
+  padding: 1.25rem 1.5rem;
+  color: #e0e0e0;
+}
+
+.activity-name {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.type-run {
+  background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
+  color: #ffffff;
+}
+
+.type-ride {
+  background: linear-gradient(135deg, #ff6b35 0%, #fc4c02 100%);
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 1.8rem;
+  }
+
+  .main-content {
+    padding: 2rem 1rem;
+  }
+
+  .activity-table th,
+  .activity-table td {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
