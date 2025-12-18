@@ -5,6 +5,13 @@ function App() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [dibs, setDibs] = useState(() => {
+    // Load dibs from localStorage on initial load
+    const savedDibs = localStorage.getItem('segmentDibs')
+    return savedDibs ? JSON.parse(savedDibs) : {}
+  })
 
   useEffect(() => {
     fetchItems()
@@ -46,6 +53,72 @@ function App() {
     return `${value} ft`
   }
 
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const currentItems = items.slice(indexOfFirstItem, indexOfLastItem)
+  const totalPages = Math.ceil(items.length / itemsPerPage)
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value))
+    setCurrentPage(1)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleDibsChange = (itemId, value) => {
+    const newDibs = { ...dibs, [itemId]: value }
+    setDibs(newDibs)
+    localStorage.setItem('segmentDibs', JSON.stringify(newDibs))
+  }
+
+  const handleDibsClear = (itemId) => {
+    const newDibs = { ...dibs }
+    delete newDibs[itemId]
+    setDibs(newDibs)
+    localStorage.setItem('segmentDibs', JSON.stringify(newDibs))
+  }
+
+  const getPageNumbers = () => {
+    const pageNumbers = []
+    const maxVisiblePages = 5
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i)
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 5; i++) {
+          pageNumbers.push(i)
+        }
+      } else if (currentPage >= totalPages - 2) {
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pageNumbers.push(i)
+        }
+      } else {
+        for (let i = currentPage - 2; i <= currentPage + 2; i++) {
+          pageNumbers.push(i)
+        }
+      }
+    }
+    return pageNumbers
+  }
+
+  // Reset to page 1 when items change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [items.length])
+
+  // Reset to page 1 when itemsPerPage changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [itemsPerPage])
+
   return (
     <div className="app">
       <header className="header">
@@ -64,6 +137,7 @@ function App() {
             <table className="activity-table">
               <thead>
                 <tr>
+                  <th>Dibs</th>
                   <th>Segment Name</th>
                   <th>Distance</th>
                   <th>Elevation Gain</th>
@@ -84,28 +158,59 @@ function App() {
               <tbody>
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan="15" style={{ textAlign: 'center', padding: '2rem' }}>
+                    <td colSpan="16" style={{ textAlign: 'center', padding: '2rem' }}>
                       No segments found. Create some segments using the API!
                     </td>
                   </tr>
                 ) : (
-                  items.map((item) => (
+                  currentItems.map((item) => (
                     <tr key={item.id}>
-                      <td className="activity-name">{formatValue(item.segment_name)}</td>
-                      <td>{formatDistance(item.distance)}</td>
-                      <td>{formatElevation(item.elevation_gain)}</td>
-                      <td>{formatElevation(item.elevation_loss)}</td>
-                      <td>{formatValue(item.crown_holder)}</td>
-                      <td>{formatValue(item.crown_date)}</td>
-                      <td>{formatValue(item.crown_time)}</td>
-                      <td>{formatValue(item.crown_pace)}</td>
-                      <td>{formatValue(item.personal_best_time)}</td>
-                      <td>{formatValue(item.personal_best_pace)}</td>
-                      <td>{formatValue(item.personal_attempts)}</td>
-                      <td>{formatValue(item.overall_attempts)}</td>
-                      <td>{formatValue(item.difficulty)}</td>
-                      <td>{formatValue(item.last_attempt_date)}</td>
-                      <td>
+                      <td data-label="Dibs" className="dibs-cell">
+                        <div className="dibs-input-wrapper">
+                          {dibs[item.id] ? (
+                            <div className="dibs-display">
+                              <span className="dibs-name">{dibs[item.id]}</span>
+                              <button
+                                className="dibs-clear-button"
+                                onClick={() => handleDibsClear(item.id)}
+                                aria-label="Clear dibs"
+                                title="Clear dibs"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ) : (
+                            <input
+                              type="text"
+                              className="dibs-input"
+                              placeholder="Your name..."
+                              value={dibs[item.id] || ''}
+                              onChange={(e) => handleDibsChange(item.id, e.target.value)}
+                              onBlur={(e) => {
+                                if (!e.target.value.trim()) {
+                                  handleDibsClear(item.id)
+                                }
+                              }}
+                              aria-label="Claim this segment"
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td className="activity-name" data-label="">{formatValue(item.segment_name)}</td>
+                      <td data-label="Distance">{formatDistance(item.distance)}</td>
+                      <td data-label="Elevation Gain">{formatElevation(item.elevation_gain)}</td>
+                      <td data-label="Elevation Loss">{formatElevation(item.elevation_loss)}</td>
+                      <td data-label="Crown Holder">{formatValue(item.crown_holder)}</td>
+                      <td data-label="Crown Date">{formatValue(item.crown_date)}</td>
+                      <td data-label="Crown Time">{formatValue(item.crown_time)}</td>
+                      <td data-label="Crown Pace">{formatValue(item.crown_pace)}</td>
+                      <td data-label="Personal Best Time">{formatValue(item.personal_best_time)}</td>
+                      <td data-label="Personal Best Pace">{formatValue(item.personal_best_pace)}</td>
+                      <td data-label="Personal Attempts">{formatValue(item.personal_attempts)}</td>
+                      <td data-label="Overall Attempts">{formatValue(item.overall_attempts)}</td>
+                      <td data-label="Difficulty">{formatValue(item.difficulty)}</td>
+                      <td data-label="Last Attempt Date">{formatValue(item.last_attempt_date)}</td>
+                      <td data-label="Strava">
                         {item.strava_url ? (
                           <a 
                             href={item.strava_url} 
@@ -124,6 +229,61 @@ function App() {
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+        {!loading && !error && items.length > 0 && (
+          <div className="pagination-container">
+            <div className="pagination-left">
+              <div className="pagination-info">
+                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, items.length)} of {items.length} segments
+              </div>
+              <div className="items-per-page">
+                <label htmlFor="items-per-page-select" className="items-per-page-label">
+                  Show:
+                </label>
+                <select
+                  id="items-per-page-select"
+                  className="items-per-page-select"
+                  value={itemsPerPage}
+                  onChange={handleItemsPerPageChange}
+                  aria-label="Items per page"
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            </div>
+            <div className="pagination">
+              <button
+                className="pagination-button"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                aria-label="Previous page"
+              >
+                ‹
+              </button>
+              {getPageNumbers().map((pageNum) => (
+                <button
+                  key={pageNum}
+                  className={`pagination-button ${currentPage === pageNum ? 'active' : ''}`}
+                  onClick={() => handlePageChange(pageNum)}
+                  aria-label={`Page ${pageNum}`}
+                  aria-current={currentPage === pageNum ? 'page' : undefined}
+                >
+                  {pageNum}
+                </button>
+              ))}
+              <button
+                className="pagination-button"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                aria-label="Next page"
+              >
+                ›
+              </button>
+            </div>
           </div>
         )}
       </main>
