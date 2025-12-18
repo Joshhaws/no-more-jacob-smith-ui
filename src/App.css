@@ -407,13 +407,38 @@
 
   .activity-table td.dibs-cell {
     order: -1;
-    padding-bottom: 1rem;
-    margin-bottom: 0.75rem;
-    border-bottom: 2px solid rgba(255, 107, 53, 0.2);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid rgba(255, 107, 53, 0.3);
+    background: rgba(255, 107, 53, 0.08);
+    border-radius: 8px;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .activity-table td.dibs-cell::before {
-    display: none;
+    content: "🎯 DIBS";
+    display: block !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    color: rgba(255, 107, 53, 0.95);
+    text-align: left;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 107, 53, 0.2);
+  }
+
+  .activity-table td.dibs-cell .dibs-input-wrapper {
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .activity-table td.dibs-cell .dibs-input {
+    margin-right: 0.5rem;
+    flex: 1;
   }
 
   .activity-table td.activity-name {
@@ -647,22 +672,6 @@
 @media (max-width: 1024px) {
   .dibs-cell {
     min-width: auto;
-  }
-
-  .activity-table td.dibs-cell {
-    padding: 0.875rem 0;
-  }
-
-  .activity-table td.dibs-cell::before {
-    content: attr(data-label);
-    font-weight: 500;
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    color: rgba(255, 107, 53, 0.9);
-    text-align: left;
-    flex: 1;
-    margin-right: 1rem;
   }
 
   .dibs-input-wrapper {

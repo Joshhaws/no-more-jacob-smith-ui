@@ -828,7 +828,7 @@ function App() {
                               <input
                                 type="text"
                                 className="dibs-input"
-                                placeholder="Your name..."
+                                placeholder="Input name"
                                 value={tempDibs[item.id] !== undefined ? tempDibs[item.id] : (item.dibs || '')}
                                 onChange={(e) => {
                                   setTempDibs({ ...tempDibs, [item.id]: e.target.value })
