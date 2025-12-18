@@ -14,7 +14,8 @@ function App() {
     try {
       setLoading(true)
       setError(null)
-      const response = await fetch('http://localhost:8000/items/')
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/items/`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
