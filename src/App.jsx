@@ -1,49 +1,130 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 
 function App() {
-  const [activities] = useState([
-    { id: 1, name: 'Morning Run', type: 'Run', distance: '5.2 km', time: '28:45', date: '2024-01-15' },
-    { id: 2, name: 'Evening Ride', type: 'Ride', distance: '32.1 km', time: '1:15:30', date: '2024-01-14' },
-    { id: 3, name: 'Trail Run', type: 'Run', distance: '8.7 km', time: '42:20', date: '2024-01-13' },
-    { id: 4, name: 'Long Ride', type: 'Ride', distance: '65.3 km', time: '2:30:15', date: '2024-01-12' },
-    { id: 5, name: 'Interval Training', type: 'Run', distance: '6.5 km', time: '31:10', date: '2024-01-11' },
-  ])
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    fetchItems()
+  }, [])
+
+  const fetchItems = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await fetch('http://localhost:8000/items/')
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setItems(data)
+    } catch (err) {
+      setError(err.message)
+      console.error('Error fetching items:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatValue = (value) => {
+    if (value === null || value === undefined || value === 'NaN' || value === '') {
+      return '—'
+    }
+    return value
+  }
+
+  const formatDistance = (value) => {
+    if (!value || value === 'NaN') return '—'
+    return `${value} mi`
+  }
+
+  const formatElevation = (value) => {
+    if (!value || value === 'NaN') return '—'
+    return `${value} ft`
+  }
 
   return (
     <div className="app">
       <header className="header">
-        <h1>Activity Dashboard</h1>
+        <h1>Strava Segment Tracker</h1>
       </header>
       <main className="main-content">
-        <div className="table-container">
-          <table className="activity-table">
-            <thead>
-              <tr>
-                <th>Activity</th>
-                <th>Type</th>
-                <th>Distance</th>
-                <th>Time</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {activities.map((activity) => (
-                <tr key={activity.id}>
-                  <td className="activity-name">{activity.name}</td>
-                  <td>
-                    <span className={`type-badge type-${activity.type.toLowerCase()}`}>
-                      {activity.type}
-                    </span>
-                  </td>
-                  <td>{activity.distance}</td>
-                  <td>{activity.time}</td>
-                  <td>{activity.date}</td>
+        {loading && <div className="loading">Loading segments...</div>}
+        {error && (
+          <div className="error">
+            Error loading segments: {error}
+            <button onClick={fetchItems} className="retry-button">Retry</button>
+          </div>
+        )}
+        {!loading && !error && (
+          <div className="table-container">
+            <table className="activity-table">
+              <thead>
+                <tr>
+                  <th>Segment Name</th>
+                  <th>Distance</th>
+                  <th>Elevation Gain</th>
+                  <th>Elevation Loss</th>
+                  <th>Crown Holder</th>
+                  <th>Crown Date</th>
+                  <th>Crown Time</th>
+                  <th>Crown Pace</th>
+                  <th>Personal Best Time</th>
+                  <th>Personal Best Pace</th>
+                  <th>Personal Attempts</th>
+                  <th>Overall Attempts</th>
+                  <th>Difficulty</th>
+                  <th>Last Attempt Date</th>
+                  <th>Strava</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {items.length === 0 ? (
+                  <tr>
+                    <td colSpan="15" style={{ textAlign: 'center', padding: '2rem' }}>
+                      No segments found. Create some segments using the API!
+                    </td>
+                  </tr>
+                ) : (
+                  items.map((item) => (
+                    <tr key={item.id}>
+                      <td className="activity-name">{formatValue(item.segment_name)}</td>
+                      <td>{formatDistance(item.distance)}</td>
+                      <td>{formatElevation(item.elevation_gain)}</td>
+                      <td>{formatElevation(item.elevation_loss)}</td>
+                      <td>{formatValue(item.crown_holder)}</td>
+                      <td>{formatValue(item.crown_date)}</td>
+                      <td>{formatValue(item.crown_time)}</td>
+                      <td>{formatValue(item.crown_pace)}</td>
+                      <td>{formatValue(item.personal_best_time)}</td>
+                      <td>{formatValue(item.personal_best_pace)}</td>
+                      <td>{formatValue(item.personal_attempts)}</td>
+                      <td>{formatValue(item.overall_attempts)}</td>
+                      <td>{formatValue(item.difficulty)}</td>
+                      <td>{formatValue(item.last_attempt_date)}</td>
+                      <td>
+                        {item.strava_url ? (
+                          <a 
+                            href={item.strava_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="strava-link"
+                          >
+                            View Segment
+                          </a>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </main>
     </div>
   )

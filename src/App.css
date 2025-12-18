@@ -20,19 +20,22 @@
 
 .main-content {
   padding: 3rem 2rem;
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
+  overflow-x: auto;
 }
 
 .table-container {
   background: #2a2a2a;
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: visible;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
 }
 
 .activity-table {
   width: 100%;
+  min-width: 1400px;
   border-collapse: collapse;
 }
 
@@ -41,13 +44,14 @@
 }
 
 .activity-table th {
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1rem;
   text-align: left;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: #ffffff;
+  white-space: nowrap;
 }
 
 .activity-table tbody tr {
@@ -64,8 +68,10 @@
 }
 
 .activity-table td {
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1rem;
   color: #e0e0e0;
+  white-space: nowrap;
+  font-size: 0.9rem;
 }
 
 .activity-name {
@@ -83,14 +89,63 @@
   letter-spacing: 0.5px;
 }
 
-.type-run {
-  background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
+.type-active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #ffffff;
 }
 
-.type-ride {
-  background: linear-gradient(135deg, #ff6b35 0%, #fc4c02 100%);
+.type-inactive {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
   color: #ffffff;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.2rem;
+  color: #e0e0e0;
+}
+
+.error {
+  background: #2a2a2a;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  color: #ff6b6b;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.retry-button {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.retry-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(252, 76, 2, 0.4);
+}
+
+.retry-button:active {
+  transform: translateY(0);
+}
+
+.strava-link {
+  color: #fc4c02;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.strava-link:hover {
+  color: #ff6b35;
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {
