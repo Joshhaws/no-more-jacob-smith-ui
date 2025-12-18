@@ -37,6 +37,78 @@
   z-index: 1;
 }
 
+.strava-auth-section {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.strava-status {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.strava-status.connected {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.strava-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.strava-button.connect-button {
+  background: #fc4c02;
+  color: #ffffff;
+}
+
+.strava-button.connect-button:hover {
+  background: #e64400;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(252, 76, 2, 0.3);
+}
+
+.strava-button.sync-all-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.strava-button.sync-all-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.strava-button.sync-all-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.strava-button.disconnect-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.strava-button.disconnect-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
 .main-content {
   padding: 4rem 2rem;
   max-width: 100%;
@@ -180,6 +252,182 @@
   box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
 }
 
+.fetch-button {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 107, 53, 0.2);
+  border: 1px solid rgba(255, 107, 53, 0.4);
+  border-radius: 8px;
+  color: rgba(255, 107, 53, 0.9);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.fetch-button:hover:not(:disabled) {
+  background: rgba(255, 107, 53, 0.3);
+  border-color: rgba(255, 107, 53, 0.6);
+  color: rgba(255, 107, 53, 1);
+  transform: translateY(-1px);
+}
+
+.fetch-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.segment-preview-card {
+  margin-top: 2rem;
+  background: rgba(30, 30, 30, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3),
+              0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+}
+
+.segment-preview-card h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: rgba(255, 107, 53, 0.95);
+  letter-spacing: -0.01em;
+}
+
+.preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.preview-section {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.preview-section h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: -0.01em;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.preview-info-message {
+  padding: 1rem;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.preview-info-message p {
+  margin: 0.5rem 0;
+}
+
+.preview-info-message p:first-child {
+  margin-top: 0;
+}
+
+.preview-info-message p:last-child {
+  margin-bottom: 0;
+}
+
+.preview-info-message a {
+  color: #ff6b35;
+  text-decoration: underline;
+}
+
+.preview-info-message a:hover {
+  color: #ff8c5a;
+}
+
+.preview-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.preview-label {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.preview-value {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 500;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cancel-button {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.cancel-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirm-button {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #ff4d00 0%, #ff6b35 100%);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 77, 0, 0.3);
+}
+
+.confirm-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 77, 0, 0.4);
+  background: linear-gradient(135deg, #ff5a0f 0%, #ff7a4a 100%);
+}
+
+.confirm-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .submit-button {
   padding: 1rem 2.5rem;
   background: linear-gradient(135deg, #ff4d00 0%, #ff6b35 100%);
@@ -314,10 +562,22 @@
   background: transparent;
 }
 
-.activity-table tbody tr:hover {
+.activity-table tbody tr:hover:not(.accordion-details-row) {
   background: rgba(255, 107, 53, 0.08);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.segment-row {
+  transition: background-color 0.2s ease;
+}
+
+.segment-row.expanded {
+  background: rgba(255, 107, 53, 0.08) !important;
+}
+
+.segment-row.expanded:hover {
+  background: rgba(255, 107, 53, 0.12) !important;
 }
 
 .activity-table tbody tr:last-child {
@@ -590,6 +850,199 @@
   pointer-events: none;
 }
 
+.expand-column {
+  width: 50px;
+  text-align: center;
+}
+
+.expand-cell {
+  text-align: center;
+  padding: 0.875rem 0.5rem;
+}
+
+.expand-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+
+.expand-button:hover {
+  background: rgba(255, 107, 53, 0.2);
+  border-color: rgba(255, 107, 53, 0.4);
+  color: rgba(255, 107, 53, 1);
+  transform: scale(1.1);
+}
+
+.accordion-details-row {
+  background: rgba(30, 30, 30, 0.4);
+}
+
+.accordion-details-cell {
+  padding: 0 !important;
+  border-top: 2px solid rgba(255, 107, 53, 0.2);
+}
+
+.accordion-content {
+  padding: 2rem;
+}
+
+.loading-details,
+.error-details {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.error-details {
+  color: rgba(239, 68, 68, 0.9);
+}
+
+.retry-details-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 107, 53, 0.2);
+  border: 1px solid rgba(255, 107, 53, 0.4);
+  border-radius: 6px;
+  color: rgba(255, 107, 53, 0.9);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.retry-details-button:hover {
+  background: rgba(255, 107, 53, 0.3);
+  border-color: rgba(255, 107, 53, 0.6);
+}
+
+.segment-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.details-section {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.details-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(255, 107, 53, 0.9);
+  letter-spacing: -0.01em;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-label {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.detail-value {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 500;
+}
+
+.detail-value.highlight {
+  color: rgba(255, 107, 53, 0.95);
+  font-weight: 600;
+}
+
+.strava-link {
+  color: rgba(255, 107, 53, 0.9);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.strava-link:hover {
+  color: rgba(255, 107, 53, 1);
+  text-decoration: underline;
+}
+
+.connect-prompt {
+  text-align: center;
+  padding: 1rem;
+}
+
+.connect-prompt p {
+  margin: 0 0 1rem 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+}
+
+.connect-prompt p.no-strava-url {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+}
+
+.connect-prompt .strava-button {
+  margin: 0 auto;
+}
+
+.strava-syncing {
+  padding: 0.75rem;
+  background: rgba(255, 107, 53, 0.1);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: rgba(255, 107, 53, 0.9);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.strava-error {
+  padding: 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: rgba(239, 68, 68, 0.9);
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.strava-badge {
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+  opacity: 0.7;
+  vertical-align: middle;
+}
+
 .actions-column {
   width: 80px;
   text-align: center;
@@ -598,6 +1051,46 @@
 .actions-cell {
   text-align: center;
   padding: 0.875rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.sync-button {
+  background: rgba(252, 76, 2, 0.15);
+  border: 1px solid rgba(252, 76, 2, 0.3);
+  border-radius: 8px;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(252, 76, 2, 0.9);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.sync-button:hover:not(:disabled) {
+  background: rgba(252, 76, 2, 0.25);
+  border-color: rgba(252, 76, 2, 0.5);
+  color: rgba(252, 76, 2, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(252, 76, 2, 0.2);
+}
+
+.sync-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(252, 76, 2, 0.2);
+}
+
+.sync-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .delete-button {
@@ -942,6 +1435,29 @@
   color: #ff8c5a;
   background: rgba(255, 107, 53, 0.1);
   text-decoration: none;
+}
+
+.crown-edit-input {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.5rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1rem;
+  font-weight: 500;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.crown-edit-input:focus {
+  outline: none;
+  border-color: rgba(255, 107, 53, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.crown-edit-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 @media (max-width: 768px) {
