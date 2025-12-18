@@ -7,13 +7,13 @@ function App() {
   const [error, setError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [dibs, setDibs] = useState(() => {
-    // Load dibs from localStorage on initial load
-    const savedDibs = localStorage.getItem('segmentDibs')
-    return savedDibs ? JSON.parse(savedDibs) : {}
-  })
+  const [dibs, setDibs] = useState({})
   const [tempDibs, setTempDibs] = useState({})
+  const [savingDibs, setSavingDibs] = useState({}) // Track which dibs are being saved
+  const [deletingItems, setDeletingItems] = useState({}) // Track which items are being deleted
   const [activeTab, setActiveTab] = useState('view')
+  const [sortColumn, setSortColumn] = useState(null)
+  const [sortDirection, setSortDirection] = useState('asc') // 'asc' or 'desc'
   const [formData, setFormData] = useState({
     segment_name: '',
     distance: '',
@@ -50,6 +50,16 @@ function App() {
       }
       const data = await response.json()
       setItems(data)
+      // Initialize dibs from API data (for backward compatibility with local state)
+      const dibsFromApi = {}
+      data.forEach(item => {
+        if (item.dibs) {
+          dibsFromApi[item.id] = item.dibs
+        }
+      })
+      setDibs(dibsFromApi)
+      // Clear any temp dibs when fetching fresh data
+      setTempDibs({})
     } catch (err) {
       setError(err.message)
       console.error('Error fetching items:', err)
@@ -75,11 +85,71 @@ function App() {
     return `${value} ft`
   }
 
+  // Sorting logic
+  const getSortValue = (item, column) => {
+    switch (column) {
+      case 'dibs':
+        return item.dibs || ''
+      case 'segment_name':
+        return item.segment_name || ''
+      case 'distance':
+        return item.distance ?? Infinity
+      case 'elevation_gain':
+        return item.elevation_gain ?? Infinity
+      case 'elevation_loss':
+        return item.elevation_loss ?? Infinity
+      case 'crown_holder':
+        return item.crown_holder || ''
+      case 'crown_date':
+        return item.crown_date || ''
+      case 'crown_time':
+        return item.crown_time || ''
+      case 'crown_pace':
+        return item.crown_pace || ''
+      case 'personal_best_time':
+        return item.personal_best_time || ''
+      case 'personal_best_pace':
+        return item.personal_best_pace || ''
+      case 'personal_attempts':
+        return item.personal_attempts ?? Infinity
+      case 'overall_attempts':
+        return item.overall_attempts ?? Infinity
+      case 'difficulty':
+        return item.difficulty ?? Infinity
+      case 'last_attempt_date':
+        return item.last_attempt_date || ''
+      default:
+        return ''
+    }
+  }
+
+  const sortedItems = [...items].sort((a, b) => {
+    if (!sortColumn) return 0
+    
+    const aValue = getSortValue(a, sortColumn)
+    const bValue = getSortValue(b, sortColumn)
+    
+    // Handle null/undefined values
+    if (aValue === Infinity && bValue === Infinity) return 0
+    if (aValue === Infinity) return 1
+    if (bValue === Infinity) return -1
+    
+    // Compare values
+    let comparison = 0
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      comparison = aValue - bValue
+    } else {
+      comparison = String(aValue).localeCompare(String(bValue))
+    }
+    
+    return sortDirection === 'asc' ? comparison : -comparison
+  })
+
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = items.slice(indexOfFirstItem, indexOfLastItem)
-  const totalPages = Math.ceil(items.length / itemsPerPage)
+  const currentItems = sortedItems.slice(indexOfFirstItem, indexOfLastItem)
+  const totalPages = Math.ceil(sortedItems.length / itemsPerPage)
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber)
@@ -92,32 +162,131 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleDibsChange = (itemId, value) => {
-    const newDibs = { ...dibs, [itemId]: value }
-    setDibs(newDibs)
-    localStorage.setItem('segmentDibs', JSON.stringify(newDibs))
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      // Toggle direction if clicking the same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      // Set new column and default to ascending
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+    setCurrentPage(1) // Reset to first page when sorting
   }
 
-  const handleDibsSave = (itemId) => {
-    const trimmedValue = (tempDibs[itemId] || '').trim()
-    if (trimmedValue) {
-      handleDibsChange(itemId, trimmedValue)
-      // Clear temp value after saving
+  const handleDelete = async (itemId, segmentName) => {
+    if (!window.confirm(`Are you sure you want to delete "${segmentName}"? This action cannot be undone.`)) {
+      return
+    }
+
+    setDeletingItems({ ...deletingItems, [itemId]: true })
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/items/${itemId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || `Failed to delete segment: ${response.status}`)
+      }
+
+      // Remove from items array
+      setItems(items.filter(item => item.id !== itemId))
+      // Remove from dibs if it exists
+      const newDibs = { ...dibs }
+      delete newDibs[itemId]
+      setDibs(newDibs)
+      // Remove from tempDibs if it exists
       const newTempDibs = { ...tempDibs }
       delete newTempDibs[itemId]
       setTempDibs(newTempDibs)
+      
+      // Reset to page 1 if current page would be empty
+      const remainingItems = items.filter(item => item.id !== itemId)
+      const maxPage = Math.ceil(remainingItems.length / itemsPerPage)
+      if (currentPage > maxPage && maxPage > 0) {
+        setCurrentPage(maxPage)
+      }
+    } catch (err) {
+      console.error('Error deleting segment:', err)
+      alert(`Failed to delete segment: ${err.message}`)
+    } finally {
+      setDeletingItems({ ...deletingItems, [itemId]: false })
     }
   }
 
-  const handleDibsClear = (itemId) => {
-    const newDibs = { ...dibs }
-    delete newDibs[itemId]
-    setDibs(newDibs)
-    localStorage.setItem('segmentDibs', JSON.stringify(newDibs))
-    // Also clear temp value
-    const newTempDibs = { ...tempDibs }
-    delete newTempDibs[itemId]
-    setTempDibs(newTempDibs)
+  const handleDibsSave = async (itemId) => {
+    const trimmedValue = (tempDibs[itemId] || '').trim()
+    if (trimmedValue) {
+      setSavingDibs({ ...savingDibs, [itemId]: true })
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+        const response = await fetch(`${apiUrl}/items/${itemId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ dibs: trimmedValue })
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.detail || `Failed to save dibs: ${response.status}`)
+        }
+
+        const updatedItem = await response.json()
+        // Update local state
+        setDibs({ ...dibs, [itemId]: trimmedValue })
+        // Update items array with fresh data from API
+        setItems(items.map(item => item.id === itemId ? updatedItem : item))
+        // Clear temp value after saving
+        const newTempDibs = { ...tempDibs }
+        delete newTempDibs[itemId]
+        setTempDibs(newTempDibs)
+      } catch (err) {
+        console.error('Error saving dibs:', err)
+        alert(`Failed to save dibs: ${err.message}`)
+      } finally {
+        setSavingDibs({ ...savingDibs, [itemId]: false })
+      }
+    }
+  }
+
+  const handleDibsClear = async (itemId) => {
+    setSavingDibs({ ...savingDibs, [itemId]: true })
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/items/${itemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ dibs: null })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || `Failed to clear dibs: ${response.status}`)
+      }
+
+      const updatedItem = await response.json()
+      // Update local state
+      const newDibs = { ...dibs }
+      delete newDibs[itemId]
+      setDibs(newDibs)
+      // Update items array with fresh data from API
+      setItems(items.map(item => item.id === itemId ? updatedItem : item))
+      // Also clear temp value
+      const newTempDibs = { ...tempDibs }
+      delete newTempDibs[itemId]
+      setTempDibs(newTempDibs)
+    } catch (err) {
+      console.error('Error clearing dibs:', err)
+      alert(`Failed to clear dibs: ${err.message}`)
+    } finally {
+      setSavingDibs({ ...savingDibs, [itemId]: false })
+    }
   }
 
   const handleFormChange = (e) => {
@@ -491,27 +660,148 @@ function App() {
             <table className="activity-table">
               <thead>
                 <tr>
-                  <th>Dibs</th>
-                  <th>Segment Name</th>
-                  <th>Distance</th>
-                  <th>Elevation Gain</th>
-                  <th>Elevation Loss</th>
-                  <th>Crown Holder</th>
-                  <th>Crown Date</th>
-                  <th>Crown Time</th>
-                  <th>Crown Pace</th>
-                  <th>Personal Best Time</th>
-                  <th>Personal Best Pace</th>
-                  <th>Personal Attempts</th>
-                  <th>Overall Attempts</th>
-                  <th>Difficulty</th>
-                  <th>Last Attempt Date</th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('dibs')}
+                  >
+                    Dibs
+                    {sortColumn === 'dibs' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('segment_name')}
+                  >
+                    Segment Name
+                    {sortColumn === 'segment_name' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('distance')}
+                  >
+                    Distance
+                    {sortColumn === 'distance' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('elevation_gain')}
+                  >
+                    Elevation Gain
+                    {sortColumn === 'elevation_gain' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('elevation_loss')}
+                  >
+                    Elevation Loss
+                    {sortColumn === 'elevation_loss' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('crown_holder')}
+                  >
+                    Crown Holder
+                    {sortColumn === 'crown_holder' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('crown_date')}
+                  >
+                    Crown Date
+                    {sortColumn === 'crown_date' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('crown_time')}
+                  >
+                    Crown Time
+                    {sortColumn === 'crown_time' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('crown_pace')}
+                  >
+                    Crown Pace
+                    {sortColumn === 'crown_pace' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('personal_best_time')}
+                  >
+                    Personal Best Time
+                    {sortColumn === 'personal_best_time' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('personal_best_pace')}
+                  >
+                    Personal Best Pace
+                    {sortColumn === 'personal_best_pace' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('personal_attempts')}
+                  >
+                    Personal Attempts
+                    {sortColumn === 'personal_attempts' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('overall_attempts')}
+                  >
+                    Overall Attempts
+                    {sortColumn === 'overall_attempts' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('difficulty')}
+                  >
+                    Difficulty
+                    {sortColumn === 'difficulty' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('last_attempt_date')}
+                  >
+                    Last Attempt Date
+                    {sortColumn === 'last_attempt_date' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th className="actions-column">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {items.length === 0 ? (
+                {sortedItems.length === 0 ? (
                   <tr>
-                    <td colSpan="15" style={{ textAlign: 'center', padding: '2rem' }}>
+                    <td colSpan="16" style={{ textAlign: 'center', padding: '2rem' }}>
                       No segments found. Create some segments using the API!
                     </td>
                   </tr>
@@ -520,16 +810,17 @@ function App() {
                     <tr key={item.id}>
                       <td data-label="Dibs" className="dibs-cell">
                         <div className="dibs-input-wrapper">
-                          {dibs[item.id] ? (
+                          {item.dibs ? (
                             <div className="dibs-display">
-                              <span className="dibs-name">{dibs[item.id]}</span>
+                              <span className="dibs-name">{item.dibs}</span>
                               <button
                                 className="dibs-clear-button"
                                 onClick={() => handleDibsClear(item.id)}
+                                disabled={savingDibs[item.id]}
                                 aria-label="Clear dibs"
                                 title="Clear dibs"
                               >
-                                ×
+                                {savingDibs[item.id] ? '...' : '×'}
                               </button>
                             </div>
                           ) : (
@@ -538,7 +829,7 @@ function App() {
                                 type="text"
                                 className="dibs-input"
                                 placeholder="Your name..."
-                                value={tempDibs[item.id] !== undefined ? tempDibs[item.id] : (dibs[item.id] || '')}
+                                value={tempDibs[item.id] !== undefined ? tempDibs[item.id] : (item.dibs || '')}
                                 onChange={(e) => {
                                   setTempDibs({ ...tempDibs, [item.id]: e.target.value })
                                 }}
@@ -552,10 +843,11 @@ function App() {
                               <button
                                 className="dibs-save-button"
                                 onClick={() => handleDibsSave(item.id)}
+                                disabled={savingDibs[item.id]}
                                 aria-label="Save dibs"
                                 title="Save"
                               >
-                                ✓
+                                {savingDibs[item.id] ? '...' : '✓'}
                               </button>
                             </>
                           )}
@@ -588,6 +880,17 @@ function App() {
                       <td data-label="Overall Attempts">{formatValue(item.overall_attempts)}</td>
                       <td data-label="Difficulty">{formatValue(item.difficulty)}</td>
                       <td data-label="Last Attempt Date">{formatValue(item.last_attempt_date)}</td>
+                      <td data-label="Actions" className="actions-cell">
+                        <button
+                          className="delete-button"
+                          onClick={() => handleDelete(item.id, item.segment_name)}
+                          disabled={deletingItems[item.id]}
+                          aria-label={`Delete ${item.segment_name}`}
+                          title="Delete segment"
+                        >
+                          {deletingItems[item.id] ? '...' : '🗑️'}
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -599,7 +902,7 @@ function App() {
           <div className="pagination-container">
             <div className="pagination-left">
               <div className="pagination-info">
-                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, items.length)} of {items.length} segments
+                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, sortedItems.length)} of {sortedItems.length} segments
               </div>
               <div className="items-per-page">
                 <label htmlFor="items-per-page-select" className="items-per-page-label">

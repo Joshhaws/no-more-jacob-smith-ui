@@ -277,6 +277,29 @@
   border-bottom: 2px solid rgba(255, 255, 255, 0.1);
 }
 
+.activity-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.activity-table th.sortable:hover {
+  background: rgba(255, 107, 53, 0.1);
+  color: rgba(255, 255, 255, 1);
+}
+
+.activity-table th.sortable:active {
+  background: rgba(255, 107, 53, 0.15);
+}
+
+.sort-indicator {
+  margin-left: 0.5rem;
+  color: rgba(255, 107, 53, 0.9);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 .activity-table th:first-child {
   border-top-left-radius: 20px;
 }
@@ -406,6 +429,29 @@
   .activity-table td.activity-name::before {
     display: none;
   }
+
+  .activity-table td.actions-cell {
+    justify-content: flex-end;
+    padding: 0.875rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .activity-table td.actions-cell::before {
+    content: attr(data-label);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: rgba(255, 107, 53, 0.9);
+    text-align: left;
+    flex: 1;
+    margin-right: 1rem;
+  }
+
+  .delete-button {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
 }
 
 .activity-name {
@@ -510,6 +556,60 @@
 
 .dibs-clear-button:active {
   transform: scale(0.95);
+}
+
+.dibs-clear-button:disabled,
+.dibs-save-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.actions-column {
+  width: 80px;
+  text-align: center;
+}
+
+.actions-cell {
+  text-align: center;
+  padding: 0.875rem 1rem;
+}
+
+.delete-button {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(239, 68, 68, 0.9);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  flex-shrink: 0;
+  margin: 0 auto;
+}
+
+.delete-button:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: rgba(239, 68, 68, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.delete-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(239, 68, 68, 0.2);
+}
+
+.delete-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .dibs-save-button {
