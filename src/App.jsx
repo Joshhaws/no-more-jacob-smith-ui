@@ -9,7 +9,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(25)
   const [dibs, setDibs] = useState({})
-  const [tempDibs, setTempDibs] = useState({})
+  const [tempDibs, setTempDibs] = useState({}) // Store temporary input values before saving
   const [savingDibs, setSavingDibs] = useState({}) // Track which dibs are being saved
   const [completingItems, setCompletingItems] = useState({}) // Track which items are being marked as complete
   const [activeTab, setActiveTab] = useState('view')
@@ -72,6 +72,8 @@ function App() {
         }
       })
       setDibs(dibsFromApi)
+      // Clear any temp dibs values
+      setTempDibs({})
     } catch (err) {
       setError(err.message)
       console.error('Error fetching items:', err)
@@ -534,54 +536,49 @@ function App() {
     }
   }
 
-  const handleDibsClick = async (itemId) => {
-    if (!stravaConnected) {
-      alert('Please connect your Strava account first to claim a segment.')
+  const handleDibsChange = (itemId, value) => {
+    setTempDibs({ ...tempDibs, [itemId]: value })
+  }
+
+  const handleDibsSave = async (itemId) => {
+    const dibsValue = tempDibs[itemId] !== undefined ? tempDibs[itemId]?.trim() : null
+    
+    if (!dibsValue) {
+      // If empty, clear instead
+      handleDibsClear(itemId)
       return
     }
+    
+    setSavingDibs({ ...savingDibs, [itemId]: true })
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/items/${itemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ dibs: dibsValue })
+      })
 
-      setSavingDibs({ ...savingDibs, [itemId]: true })
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      
-      // First, get athlete name from Strava
-      const athleteResponse = await fetch(`${apiUrl}/auth/strava/athlete`)
-      if (!athleteResponse.ok) {
-        if (athleteResponse.status === 401) {
-          setStravaConnected(false)
-          setAthleteName(null)
-          throw new Error('Strava authentication expired. Please reconnect.')
-        }
-        throw new Error('Failed to get athlete information')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || `Failed to save dibs: ${response.status}`)
       }
-      
-      const athleteData = await athleteResponse.json()
-      const athleteName = athleteData.athlete_name || athleteData.firstname || 'Unknown'
-      
-      // Now save the dibs with athlete name
-        const response = await fetch(`${apiUrl}/items/${itemId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        body: JSON.stringify({ dibs: athleteName })
-        })
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.detail || `Failed to save dibs: ${response.status}`)
-        }
-
-        const updatedItem = await response.json()
-        // Update local state
-      setDibs({ ...dibs, [itemId]: athleteName })
-        // Update items array with fresh data from API
-        setItems(items.map(item => item.id === itemId ? updatedItem : item))
-      } catch (err) {
-        console.error('Error saving dibs:', err)
-      alert(`Failed to claim segment: ${err.message}`)
-      } finally {
-        setSavingDibs({ ...savingDibs, [itemId]: false })
+      const updatedItem = await response.json()
+      // Update local state
+      setDibs({ ...dibs, [itemId]: dibsValue })
+      // Clear temp value after successful save
+      const newTempDibs = { ...tempDibs }
+      delete newTempDibs[itemId]
+      setTempDibs(newTempDibs)
+      // Update items array with fresh data from API
+      setItems(items.map(item => item.id === itemId ? updatedItem : item))
+    } catch (err) {
+      console.error('Error saving dibs:', err)
+      alert(`Failed to save dibs: ${err.message}`)
+    } finally {
+      setSavingDibs({ ...savingDibs, [itemId]: false })
     }
   }
 
@@ -607,6 +604,10 @@ function App() {
       const newDibs = { ...dibs }
       delete newDibs[itemId]
       setDibs(newDibs)
+      // Clear temp value
+      const newTempDibs = { ...tempDibs }
+      delete newTempDibs[itemId]
+      setTempDibs(newTempDibs)
       // Update items array with fresh data from API
       setItems(items.map(item => item.id === itemId ? updatedItem : item))
     } catch (err) {
@@ -616,6 +617,7 @@ function App() {
       setSavingDibs({ ...savingDibs, [itemId]: false })
     }
   }
+
 
   const handleFormChange = (e) => {
     const { name, value } = e.target
@@ -1004,73 +1006,121 @@ function App() {
                     className="sortable" 
                     onClick={() => handleSort('dibs')}
                   >
-                    Dibs
-                    {sortColumn === 'dibs' && (
-                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
-                    )}
+                    <span className="sortable-header">
+                      Dibs
+                      <span className="sort-indicator">
+                        {sortColumn === 'dibs' ? (
+                          sortDirection === 'asc' ? ' ▲' : ' ▼'
+                        ) : (
+                          <span className="sort-chevron">↕</span>
+                        )}
+                      </span>
+                    </span>
                   </th>
                   <th 
                     className="sortable" 
                     onClick={() => handleSort('segment_name')}
                   >
-                    Segment Name
-                    {sortColumn === 'segment_name' && (
-                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
-                    )}
+                    <span className="sortable-header">
+                      Segment Name
+                      <span className="sort-indicator">
+                        {sortColumn === 'segment_name' ? (
+                          sortDirection === 'asc' ? ' ▲' : ' ▼'
+                        ) : (
+                          <span className="sort-chevron">↕</span>
+                        )}
+                      </span>
+                    </span>
                   </th>
                   <th 
                     className="sortable" 
                     onClick={() => handleSort('strava_segment_id')}
                   >
-                    Segment ID
-                    {sortColumn === 'strava_segment_id' && (
-                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
-                    )}
+                    <span className="sortable-header">
+                      Segment ID
+                      <span className="sort-indicator">
+                        {sortColumn === 'strava_segment_id' ? (
+                          sortDirection === 'asc' ? ' ▲' : ' ▼'
+                        ) : (
+                          <span className="sort-chevron">↕</span>
+                        )}
+                      </span>
+                    </span>
                   </th>
                   <th 
                     className="sortable" 
                     onClick={() => handleSort('distance')}
                   >
-                    Distance
-                    {sortColumn === 'distance' && (
-                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
-                    )}
+                    <span className="sortable-header">
+                      Distance
+                      <span className="sort-indicator">
+                        {sortColumn === 'distance' ? (
+                          sortDirection === 'asc' ? ' ▲' : ' ▼'
+                        ) : (
+                          <span className="sort-chevron">↕</span>
+                        )}
+                      </span>
+                    </span>
                   </th>
                   <th 
                     className="sortable" 
                     onClick={() => handleSort('elevation_gain')}
                   >
-                    Elevation Gain
-                    {sortColumn === 'elevation_gain' && (
-                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
-                    )}
+                    <span className="sortable-header">
+                      Elevation Gain
+                      <span className="sort-indicator">
+                        {sortColumn === 'elevation_gain' ? (
+                          sortDirection === 'asc' ? ' ▲' : ' ▼'
+                        ) : (
+                          <span className="sort-chevron">↕</span>
+                        )}
+                      </span>
+                    </span>
                   </th>
                   <th 
                     className="sortable" 
                     onClick={() => handleSort('crown_holder')}
                   >
-                    Crown Holder
-                    {sortColumn === 'crown_holder' && (
-                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
-                    )}
+                    <span className="sortable-header">
+                      Crown Holder
+                      <span className="sort-indicator">
+                        {sortColumn === 'crown_holder' ? (
+                          sortDirection === 'asc' ? ' ▲' : ' ▼'
+                        ) : (
+                          <span className="sort-chevron">↕</span>
+                        )}
+                      </span>
+                    </span>
                   </th>
                   <th 
                     className="sortable" 
                     onClick={() => handleSort('crown_time')}
                   >
-                    Crown Time
-                    {sortColumn === 'crown_time' && (
-                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
-                    )}
+                    <span className="sortable-header">
+                      Crown Time
+                      <span className="sort-indicator">
+                        {sortColumn === 'crown_time' ? (
+                          sortDirection === 'asc' ? ' ▲' : ' ▼'
+                        ) : (
+                          <span className="sort-chevron">↕</span>
+                        )}
+                      </span>
+                    </span>
                   </th>
                   <th 
                     className="sortable" 
                     onClick={() => handleSort('crown_pace')}
                   >
-                    Crown Pace
-                    {sortColumn === 'crown_pace' && (
-                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
-                    )}
+                    <span className="sortable-header">
+                      Crown Pace
+                      <span className="sort-indicator">
+                        {sortColumn === 'crown_pace' ? (
+                          sortDirection === 'asc' ? ' ▲' : ' ▼'
+                        ) : (
+                          <span className="sort-chevron">↕</span>
+                        )}
+                      </span>
+                    </span>
                   </th>
                   <th className="actions-column">Actions</th>
                 </tr>
@@ -1107,36 +1157,53 @@ function App() {
                           </td>
                       <td data-label="Dibs" className="dibs-cell">
                         <div className="dibs-input-wrapper">
-                          {item.dibs ? (
-                            <div className="dibs-display">
-                              <span className="dibs-name">{item.dibs}</span>
-                              <button
-                                className="dibs-clear-button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDibsClear(item.id)
-                                }}
-                                disabled={savingDibs[item.id]}
-                                aria-label="Clear dibs"
-                                title="Clear dibs"
-                              >
-                                {savingDibs[item.id] ? '...' : '×'}
-                              </button>
-                            </div>
-                          ) : (
+                          <input
+                            type="text"
+                            className="dibs-input"
+                            value={tempDibs[item.id] !== undefined ? tempDibs[item.id] : (item.dibs || '')}
+                            onChange={(e) => {
+                              e.stopPropagation()
+                              handleDibsChange(item.id, e.target.value)
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.stopPropagation()
+                                handleDibsSave(item.id)
+                              }
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="Enter name..."
+                            disabled={savingDibs[item.id]}
+                          />
+                          {tempDibs[item.id] !== undefined ? (
+                            // Show save button when there are unsaved changes
                             <button
-                              className="dibs-claim-button"
+                              className="dibs-save-button"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                handleDibsClick(item.id)
+                                handleDibsSave(item.id)
                               }}
-                              disabled={!stravaConnected || savingDibs[item.id]}
-                                aria-label="Claim this segment"
-                              title={stravaConnected ? "Claim this segment" : "Connect Strava to claim"}
+                              disabled={savingDibs[item.id] || !tempDibs[item.id]?.trim()}
+                              aria-label="Save dibs"
+                              title="Save dibs"
                             >
-                              {savingDibs[item.id] ? '...' : stravaConnected ? 'Claim' : 'Connect'}
-                              </button>
-                          )}
+                              {savingDibs[item.id] ? '...' : '✓'}
+                            </button>
+                          ) : item.dibs ? (
+                            // Show delete button when there's a saved value and no unsaved changes
+                            <button
+                              className="dibs-clear-button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDibsClear(item.id)
+                              }}
+                              disabled={savingDibs[item.id]}
+                              aria-label="Clear dibs"
+                              title="Clear dibs"
+                            >
+                              {savingDibs[item.id] ? '...' : '×'}
+                            </button>
+                          ) : null}
                         </div>
                       </td>
                       <td className="activity-name" data-label="Segment Name">
@@ -1185,6 +1252,33 @@ function App() {
                                   <div className="loading-details">Loading segment details from Strava...</div>
                                 ) : (
                                   <div className="segment-details">
+                                    {/* Overview - Full Width at Top */}
+                                    <div className="details-section compact overview-full-width">
+                                      <div className="compact-header">
+                                        <h3>Overview</h3>
+                                        {item.strava_url && (
+                                          <a 
+                                            href={item.strava_url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="strava-link-inline"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            Strava →
+                                          </a>
+                                        )}
+                                      </div>
+                                      <div className="compact-inline-grid">
+                                        <span className="compact-inline-item"><span className="compact-label">Dist:</span> {formatDistance(item.distance)}</span>
+                                        <span className="compact-inline-item"><span className="compact-label">Elev:</span> {formatElevation(item.elevation_gain)}</span>
+                                        {item.elevation_loss && (
+                                          <span className="compact-inline-item"><span className="compact-label">Loss:</span> {formatElevation(item.elevation_loss)}</span>
+                                        )}
+                                        <span className="compact-inline-item"><span className="compact-label">Attempts:</span> {formatValue(item.overall_attempts)}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Map and Comparison Sections */}
                                     <div className="accordion-two-pane">
                                       {/* Left Pane - Map */}
                                       <div className="accordion-left-pane">
@@ -1200,38 +1294,14 @@ function App() {
                                             <p>No map data available</p>
                                           </div>
                                         )}
-                                        </div>
-
-                                      {/* Right Pane - Compacted Info */}
-                                      <div className="accordion-right-pane">
-                                        <div className="details-section compact">
-                                          <div className="compact-header">
-                                            <h3>Overview</h3>
-                                        {item.strava_url && (
-                                            <a 
-                                              href={item.strava_url} 
-                                              target="_blank" 
-                                              rel="noopener noreferrer"
-                                                className="strava-link-inline"
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                Strava →
-                                            </a>
-                                            )}
-                                          </div>
-                                          <div className="compact-inline-grid">
-                                            <span className="compact-inline-item"><span className="compact-label">Dist:</span> {formatDistance(item.distance)}</span>
-                                            <span className="compact-inline-item"><span className="compact-label">Elev:</span> {formatElevation(item.elevation_gain)}</span>
-                                            {item.elevation_loss && (
-                                              <span className="compact-inline-item"><span className="compact-label">Loss:</span> {formatElevation(item.elevation_loss)}</span>
-                                        )}
-                                            <span className="compact-inline-item"><span className="compact-label">Attempts:</span> {formatValue(item.overall_attempts)}</span>
                                       </div>
-                                    </div>
 
-                                        <div className="details-section compact">
-                                          <div className="compact-header">
-                                            <h3>Crown</h3>
+                                      {/* Right Pane - Crown and Personal Stats Side by Side */}
+                                      <div className="accordion-right-pane">
+                                        <div className="comparison-grid">
+                                          <div className="details-section compact comparison-card">
+                                            <div className="compact-header">
+                                              <h3>Crown</h3>
                                         {editingCrown === item.id ? (
                                               <div className="compact-buttons">
                                             <button
@@ -1353,7 +1423,7 @@ function App() {
                                     </div>
 
                                         {stravaConnected && (
-                                          <div className="details-section compact">
+                                          <div className="details-section compact comparison-card">
                                             <h3>Your Stats</h3>
                                             {isLoadingDetails && (
                                               <div className="strava-syncing compact-sync">
@@ -1433,7 +1503,7 @@ function App() {
                                                 </span>
                                               </span>
                                               <span className="compact-inline-item">
-                                                <span className="compact-label">#:</span> 
+                                                <span className="compact-label"># of efforts:</span> 
                                                 <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
                                                   {details && !details.error && details.personal_attempts !== null && details.personal_attempts !== undefined
                                                     ? details.personal_attempts 
@@ -1457,6 +1527,7 @@ function App() {
                                             </div>
                                           </div>
                                         )}
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
@@ -1545,14 +1616,126 @@ function App() {
                 <thead>
                   <tr>
                     <th className="expand-column"></th>
-                    <th>Dibs</th>
-                    <th>Segment Name</th>
-                    <th>Segment ID</th>
-                    <th>Distance</th>
-                    <th>Elevation Gain</th>
-                    <th>Crown Holder</th>
-                    <th>Crown Time</th>
-                    <th>Crown Pace</th>
+                    <th 
+                      className="sortable" 
+                      onClick={() => handleSort('dibs')}
+                    >
+                      <span className="sortable-header">
+                        Dibs
+                        <span className="sort-indicator">
+                          {sortColumn === 'dibs' ? (
+                            sortDirection === 'asc' ? ' ▲' : ' ▼'
+                          ) : (
+                            <span className="sort-chevron">↕</span>
+                          )}
+                        </span>
+                      </span>
+                    </th>
+                    <th 
+                      className="sortable" 
+                      onClick={() => handleSort('segment_name')}
+                    >
+                      <span className="sortable-header">
+                        Segment Name
+                        <span className="sort-indicator">
+                          {sortColumn === 'segment_name' ? (
+                            sortDirection === 'asc' ? ' ▲' : ' ▼'
+                          ) : (
+                            <span className="sort-chevron">↕</span>
+                          )}
+                        </span>
+                      </span>
+                    </th>
+                    <th 
+                      className="sortable" 
+                      onClick={() => handleSort('strava_segment_id')}
+                    >
+                      <span className="sortable-header">
+                        Segment ID
+                        <span className="sort-indicator">
+                          {sortColumn === 'strava_segment_id' ? (
+                            sortDirection === 'asc' ? ' ▲' : ' ▼'
+                          ) : (
+                            <span className="sort-chevron">↕</span>
+                          )}
+                        </span>
+                      </span>
+                    </th>
+                    <th 
+                      className="sortable" 
+                      onClick={() => handleSort('distance')}
+                    >
+                      <span className="sortable-header">
+                        Distance
+                        <span className="sort-indicator">
+                          {sortColumn === 'distance' ? (
+                            sortDirection === 'asc' ? ' ▲' : ' ▼'
+                          ) : (
+                            <span className="sort-chevron">↕</span>
+                          )}
+                        </span>
+                      </span>
+                    </th>
+                    <th 
+                      className="sortable" 
+                      onClick={() => handleSort('elevation_gain')}
+                    >
+                      <span className="sortable-header">
+                        Elevation Gain
+                        <span className="sort-indicator">
+                          {sortColumn === 'elevation_gain' ? (
+                            sortDirection === 'asc' ? ' ▲' : ' ▼'
+                          ) : (
+                            <span className="sort-chevron">↕</span>
+                          )}
+                        </span>
+                      </span>
+                    </th>
+                    <th 
+                      className="sortable" 
+                      onClick={() => handleSort('crown_holder')}
+                    >
+                      <span className="sortable-header">
+                        Crown Holder
+                        <span className="sort-indicator">
+                          {sortColumn === 'crown_holder' ? (
+                            sortDirection === 'asc' ? ' ▲' : ' ▼'
+                          ) : (
+                            <span className="sort-chevron">↕</span>
+                          )}
+                        </span>
+                      </span>
+                    </th>
+                    <th 
+                      className="sortable" 
+                      onClick={() => handleSort('crown_time')}
+                    >
+                      <span className="sortable-header">
+                        Crown Time
+                        <span className="sort-indicator">
+                          {sortColumn === 'crown_time' ? (
+                            sortDirection === 'asc' ? ' ▲' : ' ▼'
+                          ) : (
+                            <span className="sort-chevron">↕</span>
+                          )}
+                        </span>
+                      </span>
+                    </th>
+                    <th 
+                      className="sortable" 
+                      onClick={() => handleSort('crown_pace')}
+                    >
+                      <span className="sortable-header">
+                        Crown Pace
+                        <span className="sort-indicator">
+                          {sortColumn === 'crown_pace' ? (
+                            sortDirection === 'asc' ? ' ▲' : ' ▼'
+                          ) : (
+                            <span className="sort-chevron">↕</span>
+                          )}
+                        </span>
+                      </span>
+                    </th>
                     <th className="actions-column">Actions</th>
                   </tr>
                 </thead>
@@ -1579,40 +1762,60 @@ function App() {
                               {isExpanded ? '▼' : '▶'}
                             </button>
                           </td>
-                          <td data-label="Dibs" className="dibs-cell">
-                            <div className="dibs-input-wrapper">
-                              {item.dibs ? (
-                                <div className="dibs-display">
-                                  <span className="dibs-name">{item.dibs}</span>
-                                  <button
-                                    className="dibs-clear-button"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      handleDibsClear(item.id)
-                                    }}
-                                    disabled={savingDibs[item.id]}
-                                    aria-label="Clear dibs"
-                                    title="Clear dibs"
-                                  >
-                                    {savingDibs[item.id] ? '...' : '×'}
-                                  </button>
-                                </div>
-                              ) : (
-                                <button
-                                  className="dibs-claim-button"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleDibsClick(item.id)
-                                  }}
-                                  disabled={!stravaConnected || savingDibs[item.id]}
-                                  aria-label="Claim this segment"
-                                  title={stravaConnected ? "Claim this segment" : "Connect Strava to claim"}
-                                >
-                                  {savingDibs[item.id] ? '...' : stravaConnected ? 'Claim' : 'Connect'}
-                                </button>
-                              )}
-                            </div>
-                          </td>
+                      <td data-label="Dibs" className="dibs-cell">
+                        <div className="dibs-input-wrapper">
+                          <input
+                            type="text"
+                            className="dibs-input"
+                            value={tempDibs[item.id] !== undefined ? tempDibs[item.id] : (item.dibs || '')}
+                            onChange={(e) => {
+                              e.stopPropagation()
+                              handleDibsChange(item.id, e.target.value)
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.stopPropagation()
+                                const currentValue = tempDibs[item.id] !== undefined ? tempDibs[item.id] : ''
+                                if (currentValue.trim()) {
+                                  handleDibsSave(item.id)
+                                }
+                              }
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="Enter name..."
+                            disabled={savingDibs[item.id]}
+                          />
+                          {tempDibs[item.id] !== undefined ? (
+                            // Show save button when there are unsaved changes
+                            <button
+                              className="dibs-save-button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDibsSave(item.id)
+                              }}
+                              disabled={savingDibs[item.id] || !tempDibs[item.id]?.trim()}
+                              aria-label="Save dibs"
+                              title="Save dibs"
+                            >
+                              {savingDibs[item.id] ? '...' : '✓'}
+                            </button>
+                          ) : item.dibs ? (
+                            // Show delete button when there's a saved value and no unsaved changes
+                            <button
+                              className="dibs-clear-button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDibsClear(item.id)
+                              }}
+                              disabled={savingDibs[item.id]}
+                              aria-label="Clear dibs"
+                              title="Clear dibs"
+                            >
+                              {savingDibs[item.id] ? '...' : '×'}
+                            </button>
+                          ) : null}
+                        </div>
+                      </td>
                           <td className="activity-name" data-label="Segment Name">
                             {item.strava_url ? (
                               <a 
@@ -1659,6 +1862,33 @@ function App() {
                                   <div className="loading-details">Loading segment details from Strava...</div>
                                 ) : (
                                   <div className="segment-details">
+                                    {/* Overview - Full Width at Top */}
+                                    <div className="details-section compact overview-full-width">
+                                      <div className="compact-header">
+                                        <h3>Overview</h3>
+                                        {item.strava_url && (
+                                          <a 
+                                            href={item.strava_url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="strava-link-inline"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            Strava →
+                                          </a>
+                                        )}
+                                      </div>
+                                      <div className="compact-inline-grid">
+                                        <span className="compact-inline-item"><span className="compact-label">Dist:</span> {formatDistance(item.distance)}</span>
+                                        <span className="compact-inline-item"><span className="compact-label">Elev:</span> {formatElevation(item.elevation_gain)}</span>
+                                        {item.elevation_loss && (
+                                          <span className="compact-inline-item"><span className="compact-label">Loss:</span> {formatElevation(item.elevation_loss)}</span>
+                                        )}
+                                        <span className="compact-inline-item"><span className="compact-label">Attempts:</span> {formatValue(item.overall_attempts)}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Map and Comparison Sections */}
                                     <div className="accordion-two-pane">
                                       {/* Left Pane - Map */}
                                       <div className="accordion-left-pane">
@@ -1672,28 +1902,30 @@ function App() {
                                         ) : (
                                           <div className="no-map-placeholder">
                                             <p>No map data available</p>
+                                          </div>
+                                        )}
                                       </div>
-                                    )}
-                                  </div>
 
-                                      {/* Right Pane - Compacted Info */}
+                                      {/* Right Pane - Crown and Personal Stats Side by Side */}
                                       <div className="accordion-right-pane">
-                                        {stravaConnected && (
-                                          <div className="details-section compact">
-                                            <div className="compact-header">
-                                              <h3>Personal Best</h3>
-                                              {details?.personal_best_activity_id && (
-                                                <a
-                                                  href={`https://www.strava.com/activities/${details.personal_best_activity_id}`}
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  className="strava-link-inline"
-                                                  onClick={(e) => e.stopPropagation()}
-                                                >
-                                                  Activity →
-                                                </a>
-                                              )}
-                                            </div>
+                                        <div className="comparison-grid">
+                                          {/* Personal Best Section */}
+                                          {stravaConnected && (
+                                            <div className="details-section compact comparison-card">
+                                              <div className="compact-header">
+                                                <h3>Personal Best</h3>
+                                                {details?.personal_best_activity_id && (
+                                                  <a
+                                                    href={`https://www.strava.com/activities/${details.personal_best_activity_id}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="strava-link-inline"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                  >
+                                                    Activity →
+                                                  </a>
+                                                )}
+                                              </div>
                                             {details?.error && (
                                               <div className="strava-error compact-error">
                                                 {details.error.includes('Rate limit') || details.error.includes('429') ? (
@@ -1743,7 +1975,7 @@ function App() {
                                                 </span>
                                               </span>
                                               <span className="compact-inline-item">
-                                                <span className="compact-label">#:</span> 
+                                                <span className="compact-label"># of efforts:</span> 
                                                 <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
                                                   {details && !details.error && details.personal_attempts !== null && details.personal_attempts !== undefined
                                                     ? details.personal_attempts 
@@ -1761,9 +1993,10 @@ function App() {
                                             </div>
                                           </div>
                                         )}
-                                        <div className="details-section compact">
-                                          <div className="compact-header">
-                                            <h3>Crown</h3>
+                                          {/* Crown Section */}
+                                          <div className="details-section compact comparison-card">
+                                            <div className="compact-header">
+                                              <h3>Crown</h3>
                                         {editingCrown === item.id ? (
                                               <div className="compact-buttons">
                                               <button
@@ -1826,11 +2059,11 @@ function App() {
                                                 placeholder="Pace"
                                               />
                                               <input
-                                                type="text"
+                                                type="date"
                                                 value={crownEditData.crown_date}
                                                 onChange={(e) => setCrownEditData({ ...crownEditData, crown_date: e.target.value })}
                                                 onClick={(e) => e.stopPropagation()}
-                                                className="crown-edit-input compact-input-inline"
+                                                className="crown-edit-input compact-input-inline crown-date-input"
                                                 placeholder="Date"
                                               />
                                             </div>
@@ -1882,9 +2115,10 @@ function App() {
                                           </span>
                                         </div>
                                           )}
+                                          </div>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
                                   </div>
                                 )}
                               </div>
