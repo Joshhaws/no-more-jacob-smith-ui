@@ -1563,6 +1563,16 @@
     border-radius: 8px;
   }
 
+  .crown-date-input.compact-input-inline {
+    font-size: 0.9rem; /* Slightly larger for better readability */
+  }
+
+  .crown-date-input.compact-input-inline::-webkit-calendar-picker-indicator {
+    width: 24px;
+    height: 24px;
+    padding: 0.25rem;
+  }
+
   .loading-details,
   .error-details {
     padding: 1.25rem 0.875rem;
@@ -2347,6 +2357,37 @@
 
 .crown-edit-input::placeholder {
   color: rgba(255, 255, 255, 0.4);
+}
+
+/* Date picker styling */
+.crown-date-input {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.crown-date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(1) brightness(0.8);
+  opacity: 0.7;
+  padding: 0.25rem;
+  margin-left: 0.5rem;
+}
+
+.crown-date-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: invert(1) brightness(1);
+}
+
+/* Firefox date picker */
+.crown-date-input::-moz-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(1) brightness(0.8);
+  opacity: 0.7;
+}
+
+.crown-date-input::-moz-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: invert(1) brightness(1);
 }
 
 @media (max-width: 768px) {

@@ -332,11 +332,32 @@ function App() {
     return `${value} ft`
   }
 
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return ''
+    // If already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      return dateString
+    }
+    // Try to parse common date formats and convert to YYYY-MM-DD
+    try {
+      const date = new Date(dateString)
+      if (!isNaN(date.getTime())) {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      }
+    } catch (e) {
+      // If parsing fails, return empty string
+    }
+    return ''
+  }
+
   const startEditingCrown = (item) => {
     setEditingCrown(item.id)
     setCrownEditData({
       crown_holder: item.crown_holder || '',
-      crown_date: item.crown_date || '',
+      crown_date: formatDateForInput(item.crown_date),
       crown_time: item.crown_time || '',
       crown_pace: item.crown_pace || '',
     })
@@ -1266,13 +1287,13 @@ function App() {
                                                 placeholder="Pace"
                                               />
                                             <input
-                                              type="text"
+                                              type="date"
                                               value={crownEditData.crown_date}
                                               onChange={(e) => setCrownEditData({ ...crownEditData, crown_date: e.target.value })}
                                               onClick={(e) => e.stopPropagation()}
-                                                className="crown-edit-input compact-input-inline"
-                                                placeholder="Date"
-                                              />
+                                              className="crown-edit-input compact-input-inline crown-date-input"
+                                              placeholder="Date"
+                                            />
                                             </div>
                                           ) : (
                                             <div className="compact-inline-grid">
