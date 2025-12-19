@@ -58,7 +58,9 @@ function App() {
       setLoading(true)
       setError(null)
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/items/`)
+      const response = await fetch(`${apiUrl}/items/`, {
+        credentials: 'include'
+      })
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
@@ -87,7 +89,9 @@ function App() {
   const checkStravaStatus = async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/auth/strava/status`)
+      const response = await fetch(`${apiUrl}/auth/strava/status`, {
+        credentials: 'include'
+      })
       if (response.ok) {
         const data = await response.json()
         setStravaConnected(data.connected)
@@ -121,7 +125,8 @@ function App() {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
       const response = await fetch(`${apiUrl}/auth/strava/disconnect`, {
-        method: 'POST'
+        method: 'POST',
+        credentials: 'include'
       })
       if (response.ok) {
         setStravaConnected(false)
@@ -145,7 +150,9 @@ function App() {
     setSyncingSegmentId(item.id)
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/strava/segments/${segmentId}/times`)
+      const response = await fetch(`${apiUrl}/strava/segments/${segmentId}/times`, {
+        credentials: 'include'
+      })
       if (!response.ok) {
         if (response.status === 401) {
           setStravaConnected(false)
@@ -176,7 +183,8 @@ function App() {
           personal_best_pace: segmentData.personal_best_pace,
           personal_attempts: segmentData.personal_attempts,
           last_attempt_date: segmentData.last_attempt_date
-        })
+        }),
+        credentials: 'include'
       })
 
       if (updateResponse.ok) {
@@ -216,7 +224,9 @@ function App() {
     setSubmitError(null)
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/strava/segments/${segmentId}/metadata`)
+      const response = await fetch(`${apiUrl}/strava/segments/${segmentId}/metadata`, {
+        credentials: 'include'
+      })
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         if (response.status === 401) {
@@ -285,7 +295,9 @@ function App() {
     setLoadingDetails({ ...loadingDetails, [itemId]: true })
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/strava/segments/${segmentId}/times`)
+      const response = await fetch(`${apiUrl}/strava/segments/${segmentId}/times`, {
+        credentials: 'include'
+      })
       if (!response.ok) {
         let errorMessage = `Failed to fetch segment data: ${response.status}`
         try {
@@ -384,7 +396,8 @@ function App() {
           crown_date: crownEditData.crown_date || null,
           crown_time: crownEditData.crown_time || null,
           crown_pace: crownEditData.crown_pace || null,
-        })
+        }),
+        credentials: 'include'
       })
 
       if (!response.ok) {
@@ -514,7 +527,8 @@ function App() {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
       const response = await fetch(`${apiUrl}/items/${itemId}/complete`, {
-        method: 'PUT'
+        method: 'PUT',
+        credentials: 'include'
       })
 
       if (!response.ok) {
@@ -552,13 +566,14 @@ function App() {
     setSavingDibs({ ...savingDibs, [itemId]: true })
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/items/${itemId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ dibs: dibsValue })
-      })
+        const response = await fetch(`${apiUrl}/items/${itemId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ dibs: dibsValue }),
+          credentials: 'include'
+        })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
@@ -591,7 +606,8 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ dibs: null })
+        body: JSON.stringify({ dibs: null }),
+        credentials: 'include'
       })
 
       if (!response.ok) {
@@ -694,7 +710,8 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(submitData)
+        body: JSON.stringify(submitData),
+        credentials: 'include'
       })
 
       if (!response.ok) {
