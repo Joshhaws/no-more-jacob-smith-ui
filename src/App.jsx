@@ -1163,19 +1163,6 @@ function App() {
                               <div className="accordion-content">
                                 {isLoadingDetails ? (
                                   <div className="loading-details">Loading segment details from Strava...</div>
-                                ) : !stravaConnected && (item.strava_segment_id || extractSegmentId(item.strava_url)) ? (
-                                  <div className="connect-prompt">
-                                    <p>Connect Strava to automatically sync your latest times and attempts.</p>
-                                    <button 
-                                      className="strava-button connect-button"
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleStravaConnect()
-                                      }}
-                                    >
-                                      Connect Strava
-                                    </button>
-                                  </div>
                                 ) : (
                                   <div className="segment-details">
                                     <div className="accordion-two-pane">
@@ -1345,127 +1332,111 @@ function App() {
                                           )}
                                     </div>
 
-                                        <div className="details-section compact">
-                                          <h3>Your Stats</h3>
-                                      {isLoadingDetails && (
-                                            <div className="strava-syncing compact-sync">
-                                              <span>Syncing...</span>
-                                        </div>
-                                      )}
-                                      {details?.error && (
-                                            <div className="strava-error compact-error">
-                                              {details.error.includes('Rate limit') || details.error.includes('429') ? (
-                                                <span>⚠️ Rate limited - showing cached data. {details.error}</span>
-                                              ) : details.error.includes('401') || details.error.includes('not connected') || details.error.includes('expired') || details.error.includes('Invalid') ? (
-                                                <span>⚠️ {details.error}</span>
-                                              ) : (
-                                                <span>⚠️ Error syncing: {details.error}</span>
-                                              )}
-                                          {stravaConnected && (item.strava_segment_id || extractSegmentId(item.strava_url)) && (
-                                            <button 
-                                                  className="retry-details-button compact-retry"
-                                              onClick={(e) => {
-                                                e.stopPropagation()
-                                                const segmentId = item.strava_segment_id || extractSegmentId(item.strava_url)
-                                                if (segmentId) fetchSegmentDetails(item.id, segmentId)
-                                              }}
-                                            >
-                                              Retry
-                                            </button>
-                                          )}
-                                        </div>
-                                      )}
-                                          <div className="compact-inline-grid">
-                                            <span className="compact-inline-item">
-                                              <span className="compact-label">PB:</span> 
-                                              <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
-                                            {details && !details.error && details.personal_best_time ? (
-                                              details.personal_best_activity_id ? (
-                                                <a 
-                                                  href={`https://www.strava.com/activities/${details.personal_best_activity_id}`}
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  className="strava-link"
-                                                  onClick={(e) => e.stopPropagation()}
-                                                >
-                                                  {details.personal_best_time}
-                                                  <span className="strava-badge" title="Synced from Strava">🔄</span>
-                                                </a>
-                                              ) : (
-                                                <>
-                                                  {details.personal_best_time}
-                                                  <span className="strava-badge" title="Synced from Strava">🔄</span>
-                                                </>
-                                              )
-                                            ) : (
-                                              formatValue(item.personal_best_time) || '—'
+                                        {stravaConnected && (
+                                          <div className="details-section compact">
+                                            <h3>Your Stats</h3>
+                                            {isLoadingDetails && (
+                                              <div className="strava-syncing compact-sync">
+                                                <span>Syncing...</span>
+                                              </div>
                                             )}
-                                          </span>
-                                            </span>
-                                            <span className="compact-inline-item">
-                                              <span className="compact-label">Pace:</span> 
-                                              <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
-                                            {details && !details.error && details.personal_best_pace 
-                                              ? details.personal_best_pace 
-                                              : formatValue(item.personal_best_pace) || '—'}
-                                            {details && !details.error && details.personal_best_pace && (
-                                              <span className="strava-badge" title="Synced from Strava">🔄</span>
+                                            {details?.error && (
+                                              <div className="strava-error compact-error">
+                                                {details.error.includes('Rate limit') || details.error.includes('429') ? (
+                                                  <span>⚠️ Rate limited - showing cached data. {details.error}</span>
+                                                ) : details.error.includes('401') || details.error.includes('not connected') || details.error.includes('expired') || details.error.includes('Invalid') ? (
+                                                  <span>⚠️ {details.error}</span>
+                                                ) : (
+                                                  <span>⚠️ Error syncing: {details.error}</span>
+                                                )}
+                                                {stravaConnected && (item.strava_segment_id || extractSegmentId(item.strava_url)) && (
+                                                  <button 
+                                                    className="retry-details-button compact-retry"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation()
+                                                      const segmentId = item.strava_segment_id || extractSegmentId(item.strava_url)
+                                                      if (segmentId) fetchSegmentDetails(item.id, segmentId)
+                                                    }}
+                                                  >
+                                                    Retry
+                                                  </button>
+                                                )}
+                                              </div>
                                             )}
-                                          </span>
-                                            </span>
-                                            <span className="compact-inline-item">
-                                              <span className="compact-label">GAP:</span> 
-                                              <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
-                                            {details && !details.error && details.personal_best_grade_adjusted_pace 
-                                              ? details.personal_best_grade_adjusted_pace 
-                                              : '—'}
-                                            {details && !details.error && details.personal_best_grade_adjusted_pace && (
-                                              <span className="strava-badge" title="Calculated from Strava data">🔄</span>
-                                            )}
-                                          </span>
-                                            </span>
-                                            <span className="compact-inline-item">
-                                              <span className="compact-label">#:</span> 
-                                              <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
-                                            {details && !details.error && details.personal_attempts !== null && details.personal_attempts !== undefined
-                                              ? details.personal_attempts 
-                                              : formatValue(item.personal_attempts) || '0'}
-                                            {details && !details.error && details.personal_attempts !== null && details.personal_attempts !== undefined && (
-                                              <span className="strava-badge" title="Synced from Strava">🔄</span>
-                                            )}
-                                          </span>
-                                            </span>
-                                            <span className="compact-inline-item">
-                                              <span className="compact-label">Last:</span> 
-                                              <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
-                                            {details && !details.error && details.last_attempt_date 
-                                              ? details.last_attempt_date 
-                                              : formatValue(item.last_attempt_date) || '—'}
-                                            {details && !details.error && details.last_attempt_date && (
-                                              <span className="strava-badge" title="Synced from Strava">🔄</span>
-                                            )}
+                                            <div className="compact-inline-grid">
+                                              <span className="compact-inline-item">
+                                                <span className="compact-label">PB:</span> 
+                                                <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
+                                                  {details && !details.error && details.personal_best_time ? (
+                                                    details.personal_best_activity_id ? (
+                                                      <a 
+                                                        href={`https://www.strava.com/activities/${details.personal_best_activity_id}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="strava-link"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                      >
+                                                        {details.personal_best_time}
+                                                        <span className="strava-badge" title="Synced from Strava">🔄</span>
+                                                      </a>
+                                                    ) : (
+                                                      <>
+                                                        {details.personal_best_time}
+                                                        <span className="strava-badge" title="Synced from Strava">🔄</span>
+                                                      </>
+                                                    )
+                                                  ) : (
+                                                    formatValue(item.personal_best_time) || '—'
+                                                  )}
+                                                </span>
                                               </span>
-                                          </span>
-                                      </div>
-                                      {!stravaConnected && (item.strava_segment_id || extractSegmentId(item.strava_url)) && (
-                                            <div className="connect-prompt compact-prompt">
-                                          <button 
-                                                className="strava-button connect-button compact-btn"
-                                            onClick={(e) => {
-                                              e.stopPropagation()
-                                              handleStravaConnect()
-                                            }}
-                                          >
-                                            Connect Strava
-                                          </button>
-                                        </div>
-                                      )}
-                                      {!stravaConnected && !(item.strava_segment_id || extractSegmentId(item.strava_url)) && (
-                                            <div className="connect-prompt compact-prompt">
-                                              <p className="no-strava-url">No Strava URL</p>
-                                        </div>
-                                      )}
-                                        </div>
+                                              <span className="compact-inline-item">
+                                                <span className="compact-label">Pace:</span> 
+                                                <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
+                                                  {details && !details.error && details.personal_best_pace 
+                                                    ? details.personal_best_pace 
+                                                    : formatValue(item.personal_best_pace) || '—'}
+                                                  {details && !details.error && details.personal_best_pace && (
+                                                    <span className="strava-badge" title="Synced from Strava">🔄</span>
+                                                  )}
+                                                </span>
+                                              </span>
+                                              <span className="compact-inline-item">
+                                                <span className="compact-label">GAP:</span> 
+                                                <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
+                                                  {details && !details.error && details.personal_best_grade_adjusted_pace 
+                                                    ? details.personal_best_grade_adjusted_pace 
+                                                    : '—'}
+                                                  {details && !details.error && details.personal_best_grade_adjusted_pace && (
+                                                    <span className="strava-badge" title="Calculated from Strava data">🔄</span>
+                                                  )}
+                                                </span>
+                                              </span>
+                                              <span className="compact-inline-item">
+                                                <span className="compact-label">#:</span> 
+                                                <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
+                                                  {details && !details.error && details.personal_attempts !== null && details.personal_attempts !== undefined
+                                                    ? details.personal_attempts 
+                                                    : formatValue(item.personal_attempts) || '0'}
+                                                  {details && !details.error && details.personal_attempts !== null && details.personal_attempts !== undefined && (
+                                                    <span className="strava-badge" title="Synced from Strava">🔄</span>
+                                                  )}
+                                                </span>
+                                              </span>
+                                              <span className="compact-inline-item">
+                                                <span className="compact-label">Last:</span> 
+                                                <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
+                                                  {details && !details.error && details.last_attempt_date 
+                                                    ? details.last_attempt_date 
+                                                    : formatValue(item.last_attempt_date) || '—'}
+                                                  {details && !details.error && details.last_attempt_date && (
+                                                    <span className="strava-badge" title="Synced from Strava">🔄</span>
+                                                  )}
+                                                </span>
+                                              </span>
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   </div>
@@ -1683,87 +1654,89 @@ function App() {
 
                                       {/* Right Pane - Compacted Info */}
                                       <div className="accordion-right-pane">
-                                        <div className="details-section compact">
-                                          <div className="compact-header">
-                                      <h3>Personal Best</h3>
-                                        {details.personal_best_activity_id && (
-                                            <a
-                                              href={`https://www.strava.com/activities/${details.personal_best_activity_id}`}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                                className="strava-link-inline"
-                                              onClick={(e) => e.stopPropagation()}
-                                            >
-                                                Activity →
-                                            </a>
-                                            )}
-                                          </div>
-                                          {details?.error && (
-                                            <div className="strava-error compact-error">
-                                              {details.error.includes('Rate limit') || details.error.includes('429') ? (
-                                                <span>⚠️ Rate limited - showing cached data. {details.error}</span>
-                                              ) : details.error.includes('401') || details.error.includes('not connected') || details.error.includes('expired') || details.error.includes('Invalid') ? (
-                                                <span>⚠️ {details.error}</span>
-                                              ) : (
-                                                <span>⚠️ Error syncing: {details.error}</span>
-                                              )}
-                                              {stravaConnected && (item.strava_segment_id || extractSegmentId(item.strava_url)) && (
-                                                <button 
-                                                  className="retry-details-button compact-retry"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    const segmentId = item.strava_segment_id || extractSegmentId(item.strava_url)
-                                                    if (segmentId) fetchSegmentDetails(item.id, segmentId)
-                                                  }}
+                                        {stravaConnected && (
+                                          <div className="details-section compact">
+                                            <div className="compact-header">
+                                              <h3>Personal Best</h3>
+                                              {details?.personal_best_activity_id && (
+                                                <a
+                                                  href={`https://www.strava.com/activities/${details.personal_best_activity_id}`}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="strava-link-inline"
+                                                  onClick={(e) => e.stopPropagation()}
                                                 >
-                                                  Retry
-                                                </button>
+                                                  Activity →
+                                                </a>
                                               )}
-                                        </div>
-                                          )}
-                                          <div className="compact-inline-grid">
-                                            <span className="compact-inline-item">
-                                              <span className="compact-label">Time:</span> 
-                                              <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
-                                                {details && !details.error && details.personal_best_time 
-                                                  ? details.personal_best_time 
-                                                  : formatValue(item.personal_best_time) || '—'}
+                                            </div>
+                                            {details?.error && (
+                                              <div className="strava-error compact-error">
+                                                {details.error.includes('Rate limit') || details.error.includes('429') ? (
+                                                  <span>⚠️ Rate limited - showing cached data. {details.error}</span>
+                                                ) : details.error.includes('401') || details.error.includes('not connected') || details.error.includes('expired') || details.error.includes('Invalid') ? (
+                                                  <span>⚠️ {details.error}</span>
+                                                ) : (
+                                                  <span>⚠️ Error syncing: {details.error}</span>
+                                                )}
+                                                {stravaConnected && (item.strava_segment_id || extractSegmentId(item.strava_url)) && (
+                                                  <button 
+                                                    className="retry-details-button compact-retry"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation()
+                                                      const segmentId = item.strava_segment_id || extractSegmentId(item.strava_url)
+                                                      if (segmentId) fetchSegmentDetails(item.id, segmentId)
+                                                    }}
+                                                  >
+                                                    Retry
+                                                  </button>
+                                                )}
+                                              </div>
+                                            )}
+                                            <div className="compact-inline-grid">
+                                              <span className="compact-inline-item">
+                                                <span className="compact-label">Time:</span> 
+                                                <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
+                                                  {details && !details.error && details.personal_best_time 
+                                                    ? details.personal_best_time 
+                                                    : formatValue(item.personal_best_time) || '—'}
+                                                </span>
                                               </span>
-                                            </span>
-                                            <span className="compact-inline-item">
-                                              <span className="compact-label">Pace:</span> 
-                                              <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
-                                                {details && !details.error && details.personal_best_pace 
-                                                  ? details.personal_best_pace 
-                                                  : formatValue(item.personal_best_pace) || '—'}
+                                              <span className="compact-inline-item">
+                                                <span className="compact-label">Pace:</span> 
+                                                <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
+                                                  {details && !details.error && details.personal_best_pace 
+                                                    ? details.personal_best_pace 
+                                                    : formatValue(item.personal_best_pace) || '—'}
+                                                </span>
                                               </span>
-                                            </span>
-                                            <span className="compact-inline-item">
-                                              <span className="compact-label">GAP:</span> 
-                                              <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
-                                                {details && !details.error && details.personal_best_grade_adjusted_pace 
-                                                  ? details.personal_best_grade_adjusted_pace 
-                                                  : '—'}
+                                              <span className="compact-inline-item">
+                                                <span className="compact-label">GAP:</span> 
+                                                <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
+                                                  {details && !details.error && details.personal_best_grade_adjusted_pace 
+                                                    ? details.personal_best_grade_adjusted_pace 
+                                                    : '—'}
+                                                </span>
                                               </span>
-                                            </span>
-                                            <span className="compact-inline-item">
-                                              <span className="compact-label">#:</span> 
-                                              <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
-                                                {details && !details.error && details.personal_attempts !== null && details.personal_attempts !== undefined
-                                                  ? details.personal_attempts 
-                                                  : formatValue(item.personal_attempts) || '0'}
+                                              <span className="compact-inline-item">
+                                                <span className="compact-label">#:</span> 
+                                                <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
+                                                  {details && !details.error && details.personal_attempts !== null && details.personal_attempts !== undefined
+                                                    ? details.personal_attempts 
+                                                    : formatValue(item.personal_attempts) || '0'}
+                                                </span>
                                               </span>
-                                            </span>
-                                            <span className="compact-inline-item">
-                                              <span className="compact-label">Last:</span> 
-                                              <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
-                                                {details && !details.error && details.last_attempt_date 
-                                                  ? details.last_attempt_date 
-                                                  : formatValue(item.last_attempt_date) || '—'}
+                                              <span className="compact-inline-item">
+                                                <span className="compact-label">Last:</span> 
+                                                <span className={`compact-value ${details && !details.error ? 'highlight' : ''}`}>
+                                                  {details && !details.error && details.last_attempt_date 
+                                                    ? details.last_attempt_date 
+                                                    : formatValue(item.last_attempt_date) || '—'}
+                                                </span>
                                               </span>
-                                          </span>
-                                        </div>
-                                      </div>
+                                            </div>
+                                          </div>
+                                        )}
                                         <div className="details-section compact">
                                           <div className="compact-header">
                                             <h3>Crown</h3>
