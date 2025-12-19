@@ -1054,13 +1054,31 @@ function App() {
                       <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
                     )}
                   </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('crown_time')}
+                  >
+                    Crown Time
+                    {sortColumn === 'crown_time' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    className="sortable" 
+                    onClick={() => handleSort('crown_pace')}
+                  >
+                    Crown Pace
+                    {sortColumn === 'crown_pace' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                    )}
+                  </th>
                   <th className="actions-column">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedActiveItems.length === 0 ? (
                   <tr>
-                    <td colSpan="8" style={{ textAlign: 'center', padding: '2rem' }}>
+                    <td colSpan="10" style={{ textAlign: 'center', padding: '2rem' }}>
                       No active segments found. Create some segments using the API!
                     </td>
                   </tr>
@@ -1142,6 +1160,8 @@ function App() {
                       <td data-label="Distance">{formatDistance(item.distance)}</td>
                       <td data-label="Elevation Gain">{formatElevation(item.elevation_gain)}</td>
                       <td data-label="Crown Holder">{formatValue(item.crown_holder)}</td>
+                      <td data-label="Crown Time">{formatValue(item.crown_time)}</td>
+                      <td data-label="Crown Pace">{formatValue(item.crown_pace)}</td>
                       <td data-label="Actions" className="actions-cell">
                         <button
                               className="complete-button"
@@ -1159,7 +1179,7 @@ function App() {
                     </tr>
                         {isExpanded && (
                           <tr className="accordion-details-row">
-                            <td colSpan="8" className="accordion-details-cell">
+                            <td colSpan="10" className="accordion-details-cell">
                               <div className="accordion-content">
                                 {isLoadingDetails ? (
                                   <div className="loading-details">Loading segment details from Strava...</div>
@@ -1531,6 +1551,8 @@ function App() {
                     <th>Distance</th>
                     <th>Elevation Gain</th>
                     <th>Crown Holder</th>
+                    <th>Crown Time</th>
+                    <th>Crown Pace</th>
                     <th className="actions-column">Actions</th>
                   </tr>
                 </thead>
@@ -1612,6 +1634,8 @@ function App() {
                           <td data-label="Distance">{formatDistance(item.distance)}</td>
                           <td data-label="Elevation Gain">{formatElevation(item.elevation_gain)}</td>
                           <td data-label="Crown Holder">{formatValue(item.crown_holder)}</td>
+                          <td data-label="Crown Time">{formatValue(item.crown_time)}</td>
+                          <td data-label="Crown Pace">{formatValue(item.crown_pace)}</td>
                           <td data-label="Actions" className="actions-cell">
                             <button
                               className="complete-button"
@@ -1629,7 +1653,7 @@ function App() {
                         </tr>
                         {isExpanded && (
                           <tr className="accordion-details-row">
-                            <td colSpan="8" className="accordion-details-cell">
+                            <td colSpan="10" className="accordion-details-cell">
                               <div className="accordion-content">
                                 {isLoadingDetails ? (
                                   <div className="loading-details">Loading segment details from Strava...</div>

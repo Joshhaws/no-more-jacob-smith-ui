@@ -685,8 +685,8 @@
 }
 
 .activity-table th:nth-child(3) {
-  min-width: 180px;
-  max-width: 280px;
+  min-width: 120px;
+  max-width: 200px;
 }
 
 .activity-table th:nth-child(4) {
@@ -702,7 +702,14 @@
 
 .activity-table th:nth-child(7) {
   min-width: 110px;
-  max-width: 160px;
+  max-width: 140px;
+}
+
+.activity-table th:nth-child(8),
+.activity-table th:nth-child(9) {
+  width: 90px;
+  min-width: 90px;
+  max-width: 100px;
 }
 
 .activity-table th.actions-column {
@@ -798,7 +805,7 @@
 }
 
 .activity-table td.activity-name {
-  max-width: 280px;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -817,9 +824,18 @@
 }
 
 .activity-table td:nth-child(7) {
-  max-width: 160px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.activity-table td:nth-child(8),
+.activity-table td:nth-child(9) {
+  width: 90px;
+  min-width: 90px;
+  max-width: 100px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .activity-table td.actions-cell {
@@ -1028,8 +1044,10 @@
 
   /* Hide less important fields on mobile, show only key info */
   .activity-table td:nth-child(4),
-  .activity-table td:nth-child(7) {
-    display: none;
+  .activity-table td:nth-child(7),
+  .activity-table td:nth-child(8),
+  .activity-table td:nth-child(9) {
+    display: none; /* Hide Segment ID, Crown Holder, Crown Time, and Crown Pace in main card */
   }
 
   .activity-table td.actions-cell {
